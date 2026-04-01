@@ -1,0 +1,256 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>校園偵探 AI 英文挑戰</title>
+    <style>
+        :root {
+            --primary-color: #4A90E2;
+            --accent-color: #FF7675;
+            --bg-color: #F0F7FF;
+            --text-color: #2D3436;
+        }
+        body { 
+            font-family: "Microsoft JhengHei", sans-serif; 
+            background-color: var(--bg-color);
+            display: flex; justify-content: center; padding: 20px;
+            color: var(--text-color);
+        }
+        #game-container { 
+            width: 100%; max-width: 650px; background: white; 
+            padding: 40px; border-radius: 30px; 
+            box-shadow: 0 15px 35px rgba(0,0,0,0.1);
+            border: 5px solid #D1E9FF;
+            box-sizing: border-box;
+        }
+        h1 { color: var(--primary-color); text-align: center; font-size: 32px; margin-bottom: 20px; }
+        
+        /* AI 對話區 */
+        #chat-box { 
+            background: #F9F9F9; padding: 20px; border-radius: 20px; 
+            margin-bottom: 20px; border-left: 8px solid var(--primary-color);
+        }
+        .eng-text { font-size: 24px; font-weight: bold; color: #2c3e50; display: block; margin-bottom: 12px; line-height: 1.4; }
+        
+        /* 題目顯示區 */
+        #task-container {
+            background: #FFF8F8; padding: 25px; border-radius: 20px;
+            border: 2px solid #FFE0E0;
+            min-height: 80px;
+            display: flex; flex-direction: column; justify-content: center;
+            margin-bottom: 15px;
+        }
+        #hint-box { 
+            font-size: 18px; color: #D63031; font-weight: bold;
+            margin-bottom: 10px; display: none; text-align: center;
+        }
+        #sentence-display { font-size: 26px; line-height: 1.5; text-align: center; }
+        
+        /* 挖空底線樣式 */
+        .blank-box {
+            display: inline-block;
+            min-width: 110px;
+            border-bottom: 3px solid var(--accent-color);
+            margin: 0 8px;
+            vertical-align: bottom;
+            height: 32px;
+        }
+
+        /* 選項按鈕區 */
+        .btn-group { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; }
+        button { 
+            border: none; border-radius: 15px; 
+            cursor: pointer; font-weight: bold;
+            transition: all 0.2s; box-sizing: border-box;
+        }
+        .option-btn { background: #FFFFFF; border: 3px solid #E0E0E0; color: var(--primary-color); font-size: 22px; min-height: 70px; }
+        .option-btn:hover { background: var(--primary-color); color: white; border-color: var(--primary-color); }
+        
+        /* 功能按鈕 */
+        .audio-btn { background: #FAB1A0; color: white; padding: 10px 20px; font-size: 18px; }
+        .tool-btn { background: #BDC3C7; color: white; padding: 10px 20px; font-size: 16px; }
+
+        /* 💡 縮小版的提示按鈕 */
+        .get-hint-btn { 
+            display: block; width: fit-content; margin: 0 auto 15px auto;
+            background: none; border: 1.5px solid #BDC3C7; color: #7F8C8D;
+            padding: 5px 15px; font-size: 14px; border-radius: 20px;
+        }
+        .get-hint-btn:hover { background: #F5F6FA; border-color: #7F8C8D; }
+
+        /* 結案報告 */
+        #report { display: none; text-align: center; }
+        .score-board { background: #FFF9E6; padding: 25px; border-radius: 20px; border: 3px dashed #F1C40F; font-size: 22px; line-height: 1.8; }
+    </style>
+</head>
+<body>
+
+<div id="game-container">
+    <h1>🕵️ 校園偵探</h1>
+    
+    <div id="game-play">
+        <div id="chat-box">
+            <span id="ai-eng" class="eng-text">Loading...</span>
+            <div style="display: flex; gap: 10px;">
+                <button onclick="speakText()" class="audio-btn">🔊 聽聲音</button>
+                <button onclick="toggleChinese()" class="tool-btn">🔍 翻譯</button>
+            </div>
+        </div>
+
+        <div id="task-container">
+            <div id="hint-box">💡 提示：<span id="task-hint"></span></div>
+            <div id="sentence-display"></div>
+        </div>
+
+        <button onclick="showHint()" id="hint-trigger" class="get-hint-btn">💡 我想要提示 (Hint)</button>
+
+        <div id="options" class="btn-group"></div>
+    </div>
+
+    <div id="report">
+        <h2 style="font-size: 32px;">📁 結案報告冊</h2>
+        <div class="score-board">
+            <p>破案用時：<strong id="res-time"></strong> 秒</p>
+            <p>求助次數：<strong id="res-help"></strong> 次</p>
+            <p>最後積分：<strong id="res-score" style="color: #E67E22; font-size: 32px;"></strong></p>
+            <hr>
+            <p>偵探等級：</p>
+            <span id="res-rank" style="font-size: 38px; color: var(--accent-color); font-weight: bold;"></span>
+        </div>
+        <p id="ai-comment" style="font-size: 20px; margin: 25px 0;"></p>
+        <button onclick="location.reload()" style="background: var(--primary-color); color: white; width: 100%; font-size: 20px; padding: 15px;">重新挑戰</button>
+    </div>
+</div>
+
+<script>
+    const stages = [
+        {
+            eng: "Welcome! I need to know who you are.",
+            chi: "歡迎！我需要知道你是誰。",
+            hint: "向 AI 自我介紹：『我的名字是...』",
+            before: "My", after: "is Detective.",
+            options: ["name", "main", "none"],
+            ans: "name"
+        },
+        {
+            eng: "Look at the gate! There are some footprints.",
+            chi: "看大門口！那裡有一些腳印。",
+            hint: "描述地點：『我在校門口。』",
+            before: "I am at the", after: ".",
+            options: ["School Gate", "School Goat", "Cool Gate"],
+            ans: "School Gate"
+        },
+        {
+            eng: "The suspect is very fast. I can't catch him!",
+            chi: "嫌犯跑得非常快。我抓不到他！",
+            hint: "描述動作：『他跑得很快。』",
+            before: "He is", after: "fast.",
+            options: ["running", "raining", "runing"],
+            ans: "running"
+        },
+        {
+            eng: "I found a pizza box here. It's empty!",
+            chi: "我在這裡發現一個披薩盒。它是空的！",
+            hint: "推論喜好：『他喜歡披薩。』",
+            before: "He", after: "pizza.",
+            options: ["likes", "like", "lake"],
+            ans: "likes"
+        },
+        {
+            eng: "It's time for lunch. Everyone is hungry.",
+            chi: "午餐時間到了。大家都餓了。",
+            hint: "確認時間：『現在十二點。』",
+            before: "It's 12", after: ".",
+            options: ["o'clock", "clock", "cook"],
+            ans: "o'clock"
+        }
+    ];
+
+    let currentStage = 0;
+    let score = 1000;
+    let startTime = Date.now();
+    let helpCount = 0;
+
+    function initGame() {
+        const stage = stages[currentStage];
+        document.getElementById('ai-eng').innerText = stage.eng;
+        document.getElementById('task-hint').innerText = stage.hint;
+        
+        // 隱藏提示內容，恢復小按鈕
+        document.getElementById('hint-box').style.display = "none";
+        document.getElementById('hint-trigger').style.display = "block";
+        
+        // 生成純淨的底線結構
+        const sentenceArea = document.getElementById('sentence-display');
+        sentenceArea.innerHTML = `${stage.before} <span class="blank-box"></span> ${stage.after}`;
+        
+        const optContainer = document.getElementById('options');
+        optContainer.innerHTML = '';
+        const shuffledOptions = [...stage.options].sort(() => Math.random() - 0.5);
+        shuffledOptions.forEach(opt => {
+            const btn = document.createElement('button');
+            btn.className = 'option-btn';
+            btn.innerText = opt;
+            btn.onclick = () => checkAnswer(opt);
+            optContainer.appendChild(btn);
+        });
+        
+        speakText();
+    }
+
+    function showHint() {
+        document.getElementById('hint-box').style.display = "block";
+        document.getElementById('hint-trigger').style.display = "none";
+        helpCount++;
+        score -= 50; 
+    }
+
+    function checkAnswer(choice) {
+        if (choice === stages[currentStage].ans) {
+            currentStage++;
+            if (currentStage < stages.length) {
+                initGame();
+            } else {
+                showReport();
+            }
+        } else {
+            alert("⚠️ 拼字或文法不對喔，再試一次！");
+            score -= 30;
+        }
+    }
+
+    function toggleChinese() {
+        alert("翻譯線索：" + stages[currentStage].chi);
+        helpCount++;
+        score -= 20;
+    }
+
+    function speakText() {
+        const text = document.getElementById('ai-eng').innerText;
+        const msg = new SpeechSynthesisUtterance(text);
+        msg.lang = 'en-US';
+        msg.rate = 0.8; 
+        window.speechSynthesis.speak(msg);
+    }
+
+    function showReport() {
+        document.getElementById('game-play').style.display = "none";
+        document.getElementById('report').style.display = "block";
+        let timeUsed = Math.floor((Date.now() - startTime) / 1000);
+        let finalScore = score + Math.max(0, (300 - timeUsed) * 2);
+
+        document.getElementById('res-time').innerText = timeUsed;
+        document.getElementById('res-help').innerText = helpCount;
+        document.getElementById('res-score').innerText = finalScore;
+
+        let rank = finalScore >= 1350 ? "🏆 S級：傳說偵探" : (finalScore >= 1050 ? "🏅 A級：專業偵探" : "📜 B級：實習偵探");
+        document.getElementById('res-rank').innerText = rank;
+        document.getElementById('ai-comment').innerText = "太棒了！案件已成功偵破。你展現了優秀的英文觀察力！";
+    }
+
+    initGame();
+</script>
+
+</body>
+</html>

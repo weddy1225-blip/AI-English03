@@ -3,254 +3,262 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>校園偵探 AI 英文挑戰</title>
+    <title>校園偵探：聽力推論任務 (完整結算版)</title>
     <style>
-        :root {
-            --primary-color: #4A90E2;
-            --accent-color: #FF7675;
-            --bg-color: #F0F7FF;
-            --text-color: #2D3436;
-        }
-        body { 
-            font-family: "Microsoft JhengHei", sans-serif; 
-            background-color: var(--bg-color);
-            display: flex; justify-content: center; padding: 20px;
-            color: var(--text-color);
-        }
-        #game-container { 
-            width: 100%; max-width: 650px; background: white; 
-            padding: 40px; border-radius: 30px; 
-            box-shadow: 0 15px 35px rgba(0,0,0,0.1);
-            border: 5px solid #D1E9FF;
-            box-sizing: border-box;
-        }
-        h1 { color: var(--primary-color); text-align: center; font-size: 32px; margin-bottom: 20px; }
-        
-        /* AI 對話區 */
-        #chat-box { 
-            background: #F9F9F9; padding: 20px; border-radius: 20px; 
-            margin-bottom: 20px; border-left: 8px solid var(--primary-color);
-        }
-        .eng-text { font-size: 24px; font-weight: bold; color: #2c3e50; display: block; margin-bottom: 12px; line-height: 1.4; }
-        
-        /* 題目顯示區 */
-        #task-container {
-            background: #FFF8F8; padding: 25px; border-radius: 20px;
-            border: 2px solid #FFE0E0;
-            min-height: 80px;
-            display: flex; flex-direction: column; justify-content: center;
-            margin-bottom: 15px;
-        }
-        #hint-box { 
-            font-size: 18px; color: #D63031; font-weight: bold;
-            margin-bottom: 10px; display: none; text-align: center;
-        }
-        #sentence-display { font-size: 26px; line-height: 1.5; text-align: center; }
-        
-        /* 挖空底線樣式 */
-        .blank-box {
-            display: inline-block;
-            min-width: 110px;
-            border-bottom: 3px solid var(--accent-color);
-            margin: 0 8px;
-            vertical-align: bottom;
-            height: 32px;
-        }
-
-        /* 選項按鈕區 */
+        :root { --primary-color: #4A90E2; --accent-color: #FF7675; --bg-color: #F0F7FF; --text-color: #2D3436; --success-color: #27AE60; }
+        body { font-family: "Microsoft JhengHei", sans-serif; background-color: var(--bg-color); display: flex; justify-content: center; padding: 20px; color: var(--text-color); }
+        #game-container { width: 100%; max-width: 650px; background: white; padding: 40px; border-radius: 30px; box-shadow: 0 15px 35px rgba(0,0,0,0.1); border: 5px solid #D1E9FF; box-sizing: border-box; }
+        .page { display: none; }
+        .active { display: block; }
+        h1 { color: var(--primary-color); text-align: center; font-size: 32px; margin-bottom: 5px; }
+        .sub-title { text-align: center; color: #7F8C8D; margin-bottom: 20px; }
+        #intro-page { text-align: center; line-height: 1.8; }
+        .rule-box { background: #FFFFFF; border: 2px dashed var(--primary-color); padding: 20px; border-radius: 15px; margin: 20px 0; text-align: left; }
+        #chat-box { background: #F9F9F9; padding: 25px; border-radius: 20px; margin-bottom: 20px; border-left: 8px solid var(--primary-color); text-align: center; }
+        .audio-hint { font-size: 18px; color: #636e72; margin-bottom: 15px; font-style: italic; }
+        #translation-display { margin-top: 15px; padding: 10px; background: #E0E0E0; border-radius: 10px; font-size: 16px; color: #2D3436; display: none; min-height: 24px; }
+        #task-container { background: #F2F2F2; padding: 30px; border-radius: 15px; border: 1px solid #D1D1D1; min-height: 100px; display: flex; flex-direction: column; justify-content: center; margin-bottom: 20px; }
+        #instruction-text { color: #E67E22; font-weight: bold; margin-bottom: 15px; font-size: 16px; text-align: center; }
+        #sentence-display { font-size: 26px; line-height: 1.6; text-align: center; color: #2D3436; }
+        .blank-box { display: inline-block; min-width: 120px; border-bottom: 3px solid var(--accent-color); margin: 0 8px; vertical-align: bottom; height: 32px; }
         .btn-group { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; }
-        button { 
-            border: none; border-radius: 15px; 
-            cursor: pointer; font-weight: bold;
-            transition: all 0.2s; box-sizing: border-box;
-        }
+        button { border: none; border-radius: 15px; cursor: pointer; font-weight: bold; transition: all 0.2s; }
+        .start-btn { background: var(--primary-color); color: white; padding: 15px 40px; font-size: 22px; margin-top: 10px; }
         .option-btn { background: #FFFFFF; border: 3px solid #E0E0E0; color: var(--primary-color); font-size: 22px; min-height: 70px; }
-        .option-btn:hover { background: var(--primary-color); color: white; border-color: var(--primary-color); }
+        .option-btn:hover { background: var(--primary-color); color: white; }
+        .audio-btn { background: #FAB1A0; color: white; padding: 12px 25px; font-size: 20px; width: 100%; box-shadow: 0 4px #e17055; }
+        .audio-btn:active { box-shadow: 0 0; transform: translateY(4px); }
         
-        /* 功能按鈕 */
-        .audio-btn { background: #FAB1A0; color: white; padding: 10px 20px; font-size: 18px; }
-        .tool-btn { background: #BDC3C7; color: white; padding: 10px 20px; font-size: 16px; }
-
-        /* 💡 縮小版的提示按鈕 */
-        .get-hint-btn { 
-            display: block; width: fit-content; margin: 0 auto 15px auto;
-            background: none; border: 1.5px solid #BDC3C7; color: #7F8C8D;
-            padding: 5px 15px; font-size: 14px; border-radius: 20px;
-        }
-        .get-hint-btn:hover { background: #F5F6FA; border-color: #7F8C8D; }
-
-        /* 結案報告 */
-        #report { display: none; text-align: center; }
-        .score-board { background: #FFF9E6; padding: 25px; border-radius: 20px; border: 3px dashed #F1C40F; font-size: 22px; line-height: 1.8; }
+        /* 結算頁面樣式 */
+        #report { text-align: center; }
+        .score-board { background: #FFF9E6; padding: 25px; border-radius: 20px; border: 3px dashed #F1C40F; font-size: 20px; margin-bottom: 20px; }
+        .review-title { margin-top: 30px; color: var(--primary-color); font-size: 20px; border-bottom: 2px solid #EEE; padding-bottom: 10px; }
+        .review-item { text-align: left; background: #FAFAFA; margin: 10px 0; padding: 15px; border-radius: 10px; border-left: 5px solid var(--success-color); }
+        .review-q { font-weight: bold; color: #333; margin-bottom: 5px; }
+        .review-a { color: var(--success-color); font-size: 14px; }
     </style>
 </head>
 <body>
 
 <div id="game-container">
-    <h1>🕵️ 校園偵探</h1>
-    
-    <div id="game-play">
+    <div id="intro-page" class="page active">
+        <h1>🕵️ 校園偵探：任務簡報</h1>
+        <div class="rule-box">
+            <p>歡迎加入偵探社！你的任務如下：</p>
+            <ul>
+                <li><strong>自動播放證詞：</strong>進入新題目時，系統會自動播放證詞。</li>
+                <li><strong>挑戰不重複：</strong>題庫共 50 題，系統會記住你玩過的關卡。</li>
+                <li><strong>結算系統：</strong>完成後將顯示你的「總耗時」與「答題回顧」。</li>
+            </ul>
+        </div>
+        <button class="start-btn" onclick="startGame()">開始執行任務</button>
+    </div>
+
+    <div id="game-play" class="page">
+        <h1>🕵️ 校園偵探</h1>
+        <p class="sub-title">正在還原案件真相...</p>
         <div id="chat-box">
-            <span id="ai-eng" class="eng-text">Loading...</span>
-            <div style="display: flex; gap: 10px;">
-                <button onclick="speakText()" class="audio-btn">🔊 聽聲音</button>
-                <button onclick="toggleChinese()" class="tool-btn">🔍 翻譯</button>
+            <div class="audio-hint">👂 聽取證人的關鍵供詞：</div>
+            <button onclick="speakContext()" class="audio-btn">🔊 播放證詞錄音 (Listen)</button>
+            <div id="translation-display"></div>
+            <div style="text-align: right; margin-top: 10px;">
+                <button onclick="showTranslation()" style="background:none; color:#7F8C8D; cursor:pointer; font-size:13px; text-decoration:underline;">💡 顯示翻譯線索 (扣分)</button>
             </div>
         </div>
-
         <div id="task-container">
-            <div id="hint-box">💡 提示：<span id="task-hint"></span></div>
+            <div id="instruction-text">🎯 請聽證詞並選出句子中出現的關鍵字：</div>
             <div id="sentence-display"></div>
         </div>
-
-        <button onclick="showHint()" id="hint-trigger" class="get-hint-btn">💡 我想要提示 (Hint)</button>
-
         <div id="options" class="btn-group"></div>
     </div>
 
-    <div id="report">
-        <h2 style="font-size: 32px;">📁 結案報告冊</h2>
+    <div id="report" class="page">
+        <h1>📁 偵查任務完成</h1>
         <div class="score-board">
-            <p>破案用時：<strong id="res-time"></strong> 秒</p>
-            <p>求助次數：<strong id="res-help"></strong> 次</p>
-            <p>最後積分：<strong id="res-score" style="color: #E67E22; font-size: 32px;"></strong></p>
-            <hr>
-            <p>偵探等級：</p>
-            <span id="res-rank" style="font-size: 38px; color: var(--accent-color); font-weight: bold;"></span>
+            <p>最後積分：<strong id="res-score" style="color: #E67E22; font-size: 28px;"></strong></p>
+            <p>任務用時：<strong id="res-time" style="color: var(--primary-color);"></strong></p>
+            <p>偵探評級：<span id="res-rank" style="font-weight:bold;"></span></p>
         </div>
-        <p id="ai-comment" style="font-size: 20px; margin: 25px 0;"></p>
-        <button onclick="location.reload()" style="background: var(--primary-color); color: white; width: 100%; font-size: 20px; padding: 15px;">重新挑戰</button>
+
+        <div class="review-title">🔍 案件卷宗回顧</div>
+        <div id="review-list"></div>
+
+        <button onclick="location.reload()" style="background: var(--primary-color); color: white; width: 100%; font-size: 20px; padding: 15px; margin-top:20px; border-radius:15px;">接手新案件</button>
     </div>
 </div>
 
 <script>
-    const stages = [
-        {
-            eng: "Welcome! I need to know who you are.",
-            chi: "歡迎！我需要知道你是誰。",
-            hint: "向 AI 自我介紹：『我的名字是...』",
-            before: "My", after: "is Detective.",
-            options: ["name", "main", "none"],
-            ans: "name"
-        },
-        {
-            eng: "Look at the gate! There are some footprints.",
-            chi: "看大門口！那裡有一些腳印。",
-            hint: "描述地點：『我在校門口。』",
-            before: "I am at the", after: ".",
-            options: ["School Gate", "School Goat", "Cool Gate"],
-            ans: "School Gate"
-        },
-        {
-            eng: "The suspect is very fast. I can't catch him!",
-            chi: "嫌犯跑得非常快。我抓不到他！",
-            hint: "描述動作：『他跑得很快。』",
-            before: "He is", after: "fast.",
-            options: ["running", "raining", "runing"],
-            ans: "running"
-        },
-        {
-            eng: "I found a pizza box here. It's empty!",
-            chi: "我在這裡發現一個披薩盒。它是空的！",
-            hint: "推論喜好：『他喜歡披薩。』",
-            before: "He", after: "pizza.",
-            options: ["likes", "like", "lake"],
-            ans: "likes"
-        },
-        {
-            eng: "It's time for lunch. Everyone is hungry.",
-            chi: "午餐時間到了。大家都餓了。",
-            hint: "確認時間：『現在十二點。』",
-            before: "It's 12", after: ".",
-            options: ["o'clock", "clock", "cook"],
-            ans: "o'clock"
-        }
+    const allStages = [
+        { audio: "I'm so hungry! I want to eat some pizza.", question: "The boy wants to eat ____.", options: ["pizza", "pasta", "paper"], ans: "pizza", chi: "我很餓！我想吃披薩。" },
+        { audio: "Look at the sky! It is so blue and beautiful.", question: "The sky is ____ today.", options: ["blue", "blow", "ball"], ans: "blue", chi: "看天空！它是如此藍且漂亮。" },
+        { audio: "My name is Peter. I am a new student.", question: "His ____ is Peter.", options: ["name", "nine", "main"], ans: "name", chi: "我的名字是 Peter。我是一個新學生。" },
+        { audio: "I am late! I need to run to the classroom.", question: "He is ____ to the classroom.", options: ["running", "raining", "jumping"], ans: "running", chi: "我遲到了！我需要跑去教室。" },
+        { audio: "Where is my pencil? Oh, it is on the desk.", question: "The pencil is ____ the desk.", options: ["on", "under", "in"], ans: "on", chi: "我的鉛筆在哪裡？喔，在桌子上。" },
+        { audio: "I have two sisters and one brother.", question: "He has ____ sisters.", options: ["two", "too", "ten"], ans: "two", chi: "我有兩個姊妹和一個兄弟。" },
+        { audio: "It is 12:00. Let's have lunch!", question: "It is twelve ____.", options: ["o'clock", "clock", "cook"], ans: "o'clock", chi: "現在12點，我們吃午餐吧！" },
+        { audio: "Don't go outside. It is raining now.", question: "The weather is ____ now.", options: ["raining", "sunny", "windy"], ans: "raining", chi: "別去外面，現在正在下雨。" },
+        { audio: "I like music. I can sing many songs.", question: "The student likes ____.", options: ["music", "magic", "movie"], ans: "music", chi: "我喜歡音樂。我會唱很多歌。" },
+        { audio: "The elephant is so big! I am scared.", question: "The elephant is very ____.", options: ["big", "pig", "bag"], ans: "big", chi: "這隻大象好大！我好怕。" },
+        { audio: "I want to buy a red apple.", question: "The apple is ____.", options: ["red", "read", "bed"], ans: "red", chi: "我想買一個紅蘋果。" },
+        { audio: "My father is a doctor.", question: "His father is a ____.", options: ["doctor", "dancer", "driver"], ans: "doctor", chi: "我父親是一位醫生。" },
+        { audio: "The cat is sleeping under the table.", question: "The cat is ____ the table.", options: ["under", "after", "over"], ans: "under", chi: "貓咪正在桌子下面睡覺。" },
+        { audio: "I go to school by bus every day.", question: "He goes to school by ____.", options: ["bus", "box", "bag"], ans: "bus", chi: "我每天搭公車上學。" },
+        { audio: "It is very cold in winter.", question: "The weather is ____.", options: ["cold", "coat", "cook"], ans: "cold", chi: "冬天非常冷。" },
+        { audio: "Please close the door.", question: "Close the ____, please.", options: ["door", "doll", "desk"], ans: "door", chi: "請關門。" },
+        { audio: "I have a yellow banana.", question: "The banana is ____.", options: ["yellow", "young", "yummy"], ans: "yellow", chi: "我有一個黃色的香蕉。" },
+        { audio: "There are seven days in a week.", question: "There are ____ days.", options: ["seven", "six", "sound"], ans: "seven", chi: "一個禮拜有七天。" },
+        { audio: "I can see a monkey in the tree.", question: "The ____ is in the tree.", options: ["monkey", "money", "monday"], ans: "monkey", chi: "我看到樹上有一隻猴子。" },
+        { audio: "I like to play basketball.", question: "He likes ____.", options: ["basketball", "baseball", "bedroom"], ans: "basketball", chi: "我喜歡打籃球。" },
+        { audio: "My sister is drinking some milk.", question: "She is drinking ____.", options: ["milk", "mask", "meat"], ans: "milk", chi: "我妹妹正在喝牛奶。" },
+        { audio: "The sun is very hot today.", question: "The sun is ____.", options: ["hot", "hat", "hit"], ans: "hot", chi: "今天的太陽很大、很熱。" },
+        { audio: "Wash your hands before dinner.", question: "Wash your ____.", options: ["hands", "heads", "helps"], ans: "hands", chi: "晚餐前要洗手。" },
+        { audio: "I have ten fingers.", question: "I have ____ fingers.", options: ["ten", "tea", "toy"], ans: "ten", chi: "我有十隻手指頭。" },
+        { audio: "The bird can fly in the sky.", question: "The bird can ____.", options: ["fly", "fry", "fish"], ans: "fly", chi: "小鳥能在天空中飛。" },
+        { audio: "I am reading an English book.", question: "This is a ____.", options: ["book", "back", "bike"], ans: "book", chi: "我正在讀一本英文書。" },
+        { audio: "Open your mouth and say ah.", question: "Open your ____.", options: ["mouth", "mouse", "month"], ans: "mouth", chi: "張開你的嘴巴說啊。" },
+        { audio: "The dog is jumping now.", question: "The dog is ____.", options: ["jumping", "jogging", "joining"], ans: "jumping", chi: "那隻狗正在跳。" },
+        { audio: "I have a long ruler.", question: "The ____ is long.", options: ["ruler", "rubber", "river"], ans: "ruler", chi: "我有一把長尺。" },
+        { audio: "Today is Monday.", question: "Today is ____.", options: ["Monday", "Month", "Monkey"], ans: "Monday", chi: "今天是星期一。" },
+        { audio: "My eyes are small.", question: "His ____ are small.", options: ["eyes", "ears", "eggs"], ans: "eyes", chi: "我的眼睛很小。" },
+        { audio: "Look! The flower is pink.", question: "The flower is ____.", options: ["pink", "park", "pick"], ans: "pink", chi: "看！這朵花是粉紅色的。" },
+        { audio: "I want to go to the park.", question: "Go to the ____.", options: ["park", "pork", "peak"], ans: "park", chi: "我想去公園。" },
+        { audio: "The fish can swim.", question: "The fish can ____.", options: ["swim", "sweet", "swing"], ans: "swim", chi: "魚會游泳。" },
+        { audio: "I am happy today.", question: "He is ____.", options: ["happy", "heavy", "hungry"], ans: "happy", chi: "我今天很高興。" },
+        { audio: "Put on your jacket.", question: "Put on your ____.", options: ["jacket", "jeans", "juice"], ans: "jacket", chi: "穿上你的夾克。" },
+        { audio: "I see a white rabbit.", question: "The rabbit is ____.", options: ["white", "write", "water"], ans: "white", chi: "我看到一隻白兔。" },
+        { audio: "The box is on the floor.", question: "The box is on the ____.", options: ["floor", "flower", "fruit"], ans: "floor", chi: "箱子在地上。" },
+        { audio: "I like to eat noodles.", question: "He likes ____.", options: ["noodles", "notebook", "numbers"], ans: "noodles", chi: "我喜歡吃麵。" },
+        { audio: "The school is very big.", question: "The ____ is big.", options: ["school", "shoes", "shirt"], ans: "school", chi: "這間學校很大。" },
+        { audio: "I have a green umbrella.", question: "The umbrella is ____.", options: ["green", "great", "grass"], ans: "green", chi: "我有一把綠色的傘。" },
+        { audio: "The kitchen is clean.", question: "The ____ is clean.", options: ["kitchen", "chicken", "children"], ans: "kitchen", chi: "廚房很乾淨。" },
+        { audio: "My brother is tall.", question: "His brother is ____.", options: ["tall", "tell", "tail"], ans: "tall", chi: "我哥哥很高。" },
+        { audio: "I am eight years old.", question: "He is ____ years old.", options: ["eight", "eagle", "eighteen"], ans: "eight", chi: "我八歲。" },
+        { audio: "The teacher is kind.", question: "The ____ is kind.", options: ["teacher", "table", "tiger"], ans: "teacher", chi: "老師很親切。" },
+        { audio: "I have a sharp pencil.", question: "The ____ is sharp.", options: ["pencil", "people", "purple"], ans: "pencil", chi: "我有一枝尖銳的鉛筆。" },
+        { audio: "The water is hot.", question: "The ____ is hot.", options: ["water", "winter", "waiter"], ans: "water", chi: "水很燙。" },
+        { audio: "I see a brown bear.", question: "The bear is ____.", options: ["brown", "bread", "broom"], ans: "brown", chi: "我看到一隻棕熊。" },
+        { audio: "Please turn off the light.", question: "Turn off the ____.", options: ["light", "night", "right"], ans: "light", chi: "請關燈。" },
+        { audio: "I am wearing a blue T-shirt.", question: "He is wearing a ____.", options: ["T-shirt", "Tower", "Table"], ans: "T-shirt", chi: "我穿著一件藍色 T 恤。" }
     ];
 
-    let currentStage = 0;
+    let currentStages = [];
+    let currentStageIndex = 0;
     let score = 1000;
-    let startTime = Date.now();
-    let helpCount = 0;
+    let startTime;
+    const GAME_SIZE = 5;
+
+    function startGame() {
+        document.getElementById('intro-page').classList.remove('active');
+        document.getElementById('game-play').classList.add('active');
+        startTime = new Date(); // 紀錄開始時間
+        prepareStages();
+        initGame();
+    }
+
+    function prepareStages() {
+        let played = JSON.parse(localStorage.getItem('det_played_v50')) || [];
+        let avail = allStages.map((_, i) => i).filter(i => !played.includes(i));
+        
+        if (avail.length < GAME_SIZE) {
+            played = [];
+            avail = allStages.map((_, i) => i);
+        }
+        
+        let selected = [];
+        for (let i = 0; i < GAME_SIZE; i++) {
+            const idx = Math.floor(Math.random() * avail.length);
+            const val = avail.splice(idx, 1)[0];
+            selected.push(val);
+            played.push(val);
+        }
+        
+        localStorage.setItem('det_played_v50', JSON.stringify(played));
+        currentStages = selected.map(i => allStages[i]);
+    }
 
     function initGame() {
-        const stage = stages[currentStage];
-        document.getElementById('ai-eng').innerText = stage.eng;
-        document.getElementById('task-hint').innerText = stage.hint;
+        if (currentStageIndex >= GAME_SIZE) return;
+        const stage = currentStages[currentStageIndex];
         
-        // 隱藏提示內容，恢復小按鈕
-        document.getElementById('hint-box').style.display = "none";
-        document.getElementById('hint-trigger').style.display = "block";
-        
-        // 生成純淨的底線結構
-        const sentenceArea = document.getElementById('sentence-display');
-        sentenceArea.innerHTML = `${stage.before} <span class="blank-box"></span> ${stage.after}`;
+        const transDiv = document.getElementById('translation-display');
+        transDiv.style.display = "none";
+        transDiv.innerText = "";
+
+        const display = document.getElementById('sentence-display');
+        const parts = stage.question.split("____");
+        display.innerHTML = `${parts[0]}<span class="blank-box"></span>${parts[1]}`;
         
         const optContainer = document.getElementById('options');
         optContainer.innerHTML = '';
-        const shuffledOptions = [...stage.options].sort(() => Math.random() - 0.5);
-        shuffledOptions.forEach(opt => {
+        [...stage.options].sort(() => Math.random() - 0.5).forEach(opt => {
             const btn = document.createElement('button');
             btn.className = 'option-btn';
             btn.innerText = opt;
             btn.onclick = () => checkAnswer(opt);
             optContainer.appendChild(btn);
         });
-        
-        speakText();
+
+        window.speechSynthesis.cancel();
+        setTimeout(speakContext, 600);
     }
 
-    function showHint() {
-        document.getElementById('hint-box').style.display = "block";
-        document.getElementById('hint-trigger').style.display = "none";
-        helpCount++;
-        score -= 50; 
+    function speakContext() {
+        if (currentStageIndex >= GAME_SIZE) return;
+        const text = currentStages[currentStageIndex].audio;
+        window.speechSynthesis.cancel();
+        const msg = new SpeechSynthesisUtterance(text);
+        msg.lang = 'en-US';
+        msg.rate = 0.8;
+        window.speechSynthesis.speak(msg);
+    }
+
+    function showTranslation() {
+        const transDiv = document.getElementById('translation-display');
+        if (transDiv.style.display === "none") {
+            transDiv.innerText = "🔍 證詞翻譯：" + currentStages[currentStageIndex].chi;
+            transDiv.style.display = "block";
+            score -= 20;
+        }
     }
 
     function checkAnswer(choice) {
-        if (choice === stages[currentStage].ans) {
-            currentStage++;
-            if (currentStage < stages.length) {
+        if (choice === currentStages[currentStageIndex].ans) {
+            currentStageIndex++;
+            if (currentStageIndex < GAME_SIZE) {
                 initGame();
             } else {
                 showReport();
             }
         } else {
-            alert("⚠️ 拼字或文法不對喔，再試一次！");
-            score -= 30;
+            alert("❌ 關鍵字錯誤，請再次核對證詞內容！");
+            score -= 50;
         }
     }
 
-    function toggleChinese() {
-        alert("翻譯線索：" + stages[currentStage].chi);
-        helpCount++;
-        score -= 20;
-    }
-
-    function speakText() {
-        const text = document.getElementById('ai-eng').innerText;
-        const msg = new SpeechSynthesisUtterance(text);
-        msg.lang = 'en-US';
-        msg.rate = 0.8; 
-        window.speechSynthesis.speak(msg);
-    }
-
     function showReport() {
-        document.getElementById('game-play').style.display = "none";
-        document.getElementById('report').style.display = "block";
-        let timeUsed = Math.floor((Date.now() - startTime) / 1000);
-        let finalScore = score + Math.max(0, (300 - timeUsed) * 2);
+        const endTime = new Date();
+        const timeDiff = Math.floor((endTime - startTime) / 1000); // 算出秒數
+        
+        document.getElementById('game-play').classList.remove('active');
+        document.getElementById('report').classList.add('active');
+        
+        document.getElementById('res-score').innerText = score;
+        document.getElementById('res-time').innerText = timeDiff + " 秒";
+        document.getElementById('res-rank').innerText = score >= 900 ? "首席神探 (S)" : (score >= 700 ? "專業偵探 (A)" : "實習偵探 (B)");
 
-        document.getElementById('res-time').innerText = timeUsed;
-        document.getElementById('res-help').innerText = helpCount;
-        document.getElementById('res-score').innerText = finalScore;
-
-        let rank = finalScore >= 1350 ? "🏆 S級：傳說偵探" : (finalScore >= 1050 ? "🏅 A級：專業偵探" : "📜 B級：實習偵探");
-        document.getElementById('res-rank').innerText = rank;
-        document.getElementById('ai-comment').innerText = "太棒了！案件已成功偵破。你展現了優秀的英文觀察力！";
+        // 渲染回顧列表
+        const reviewContainer = document.getElementById('review-list');
+        reviewContainer.innerHTML = '';
+        currentStages.forEach((stage, index) => {
+            const item = document.createElement('div');
+            item.className = 'review-item';
+            item.innerHTML = `
+                <div class="review-q">第 ${index + 1} 題：${stage.question.replace('____', '<u>' + stage.ans + '</u>')}</div>
+                <div class="review-a">💡 證詞翻譯：${stage.chi}</div>
+            `;
+            reviewContainer.appendChild(item);
+        });
     }
-
-    initGame();
 </script>
-
 </body>
 </html>
